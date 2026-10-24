@@ -61,7 +61,8 @@ export class VehiclesController {
 
   async search(req: Request, res: Response, next: NextFunction) {
     try {
-      const vehicles = await vehiclesService.search(req.query as any);
+      const query = (req as any).validatedQuery || req.query;
+      const vehicles = await vehiclesService.search(query);
       return res.status(200).json({ vehicles });
     } catch (err: any) {
       return next(err);
