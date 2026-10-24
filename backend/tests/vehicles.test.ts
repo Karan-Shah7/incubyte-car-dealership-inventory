@@ -164,4 +164,66 @@ describe('Vehicles CRUD API (/api/vehicles)', () => {
       expect(found).toBeNull();
     });
   });
+
+  describe('GET /api/vehicles/search (Search & Filter)', () => {
+    beforeEach(async () => {
+      await prisma.vehicle.createMany({
+        data: [
+          { make: 'Toyota', model: 'RAV4', category: 'SUV', price: 32000, quantity: 4 },
+          { make: 'Toyota', model: 'Corolla', category: 'Sedan', price: 22000, quantity: 6 },
+          { make: 'Honda', model: 'CR-V', category: 'SUV', price: 34000, quantity: 2 },
+          { make: 'Ford', model: 'Mustang', category: 'Coupe', price: 55000, quantity: 1 },
+        ],
+      });
+    });
+
+    it('should search vehicles by make case-insensitively', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/search?make=toyota')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicles.length).toBe(2);
+      expect(res.body.vehicles.every((v: any) => v.make === 'Toyota')).toBe(true);
+    });
+
+    it('should search vehicles by category', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/search?category=SUV')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicles.length).toBe(2);
+      expect(res.body.vehicles.every((v: any) => v.category === 'SUV')).toBe(true);
+    });
+
+    it('should search vehicles by price range (minPrice & maxPrice)', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/search?minPrice=30000&maxPrice=40000')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicles.length).toBe(2);
+    });
+
+    it('should combine multiple search criteria (make + category)', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/search?make=Toyota&category=Sedan')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicles.length).toBe(1);
+      expect(res.body.vehicles[0].model).toBe('Corolla');
+    });
+
+    it('should return empty list when no vehicles match the criteria', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/search?make=Ferrari')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicles).toEqual([]);
+    });
+  });
 });
+
