@@ -25,6 +25,10 @@ export class AuthController {
       return next(err);
     }
   }
+
+  async me(req: Request, res: Response) {
+    return res.status(200).json({ user: req.user });
+  }
 }
 
 export const authController = new AuthController();
