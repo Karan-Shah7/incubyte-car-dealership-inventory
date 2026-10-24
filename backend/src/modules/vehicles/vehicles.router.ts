@@ -40,4 +40,14 @@ router.delete('/:id', requireAdmin, (req, res, next) =>
   vehiclesController.delete(req, res, next)
 );
 
+// Inventory endpoints
+router.post('/:id/purchase', (req, res, next) =>
+  vehiclesController.purchase(req, res, next)
+);
+
+router.post('/:id/restock', requireAdmin, (req, res, next) =>
+  vehiclesController.restock(req, res, next)
+);
+
 export default router;
+

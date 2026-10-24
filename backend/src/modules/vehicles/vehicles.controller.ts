@@ -68,6 +68,32 @@ export class VehiclesController {
       return next(err);
     }
   }
+
+  async purchase(req: Request, res: Response, next: NextFunction) {
+    try {
+      const result = await vehiclesService.purchase(req.params.id as string);
+      return res.status(200).json(result);
+    } catch (err: any) {
+      if (err.statusCode) {
+        return res.status(err.statusCode).json({ error: err.message });
+      }
+      return next(err);
+    }
+  }
+
+  async restock(req: Request, res: Response, next: NextFunction) {
+    try {
+      const amount = req.body?.amount !== undefined ? req.body.amount : 1;
+      const result = await vehiclesService.restock(req.params.id as string, amount);
+      return res.status(200).json(result);
+    } catch (err: any) {
+      if (err.statusCode) {
+        return res.status(err.statusCode).json({ error: err.message });
+      }
+      return next(err);
+    }
+  }
 }
 
 export const vehiclesController = new VehiclesController();
+

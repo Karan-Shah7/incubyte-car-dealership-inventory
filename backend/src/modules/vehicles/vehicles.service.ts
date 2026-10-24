@@ -83,6 +83,68 @@ export class VehiclesService {
       orderBy: { price: 'asc' },
     });
   }
+
+  async purchase(id: string) {
+    return prisma.$transaction(async (tx) => {
+      const vehicle = await tx.vehicle.findUnique({
+        where: { id },
+      });
+
+      if (!vehicle) {
+        const error: any = new Error('Vehicle not found');
+        error.statusCode = 404;
+        throw error;
+      }
+
+      if (vehicle.quantity <= 0) {
+        const error: any = new Error('Vehicle is out of stock');
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const updateResult = await tx.vehicle.updateMany({
+        where: {
+          id,
+          quantity: { gt: 0 },
+        },
+        data: {
+          quantity: { decrement: 1 },
+        },
+      });
+
+      if (updateResult.count === 0) {
+        const error: any = new Error('Vehicle is out of stock');
+        error.statusCode = 409;
+        throw error;
+      }
+
+      const updated = await tx.vehicle.findUnique({
+        where: { id },
+      });
+
+      return {
+        message: 'Vehicle purchased successfully',
+        vehicle: updated,
+      };
+    });
+  }
+
+  async restock(id: string, amount: number) {
+    await this.getById(id);
+
+    const updated = await prisma.vehicle.update({
+      where: { id },
+      data: {
+        quantity: { increment: amount },
+      },
+    });
+
+    return {
+      message: 'Vehicle restocked successfully',
+      vehicle: updated,
+    };
+  }
 }
 
 export const vehiclesService = new VehiclesService();
+
