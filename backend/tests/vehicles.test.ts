@@ -224,6 +224,70 @@ describe('Vehicles CRUD API (/api/vehicles)', () => {
       expect(res.status).toBe(200);
       expect(res.body.vehicles).toEqual([]);
     });
+
+    it('should search vehicles by model', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/search?model=Mustang')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicles.length).toBe(1);
+      expect(res.body.vehicles[0].model).toBe('Mustang');
+    });
+  });
+
+  describe('GET /api/vehicles/:id (Get Single Vehicle)', () => {
+    it('should return 200 and vehicle details for an existing vehicle', async () => {
+      const created = await prisma.vehicle.create({
+        data: { make: 'Porsche', model: '911', category: 'Coupe', price: 110000, quantity: 2 },
+      });
+
+      const res = await request(app)
+        .get(`/api/vehicles/${created.id}`)
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.vehicle.model).toBe('911');
+    });
+
+    it('should return 404 when vehicle ID does not exist', async () => {
+      const res = await request(app)
+        .get('/api/vehicles/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${userToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Vehicle not found');
+    });
+  });
+
+  describe('404 Not Found Handling for PUT and DELETE', () => {
+    it('should return 404 when updating non-existent vehicle', async () => {
+      const res = await request(app)
+        .put('/api/vehicles/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ price: 30000 });
+
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Vehicle not found');
+    });
+
+    it('should return 404 when admin deletes non-existent vehicle', async () => {
+      const res = await request(app)
+        .delete('/api/vehicles/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(res.status).toBe(404);
+      expect(res.body).toHaveProperty('error', 'Vehicle not found');
+    });
+  });
+
+  describe('Health check endpoint GET /api/health', () => {
+    it('should return 200 status ok', async () => {
+      const res = await request(app).get('/api/health');
+      expect(res.status).toBe(200);
+      expect(res.body).toHaveProperty('status', 'ok');
+    });
   });
 });
+
 
