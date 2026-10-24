@@ -7,6 +7,7 @@ import {
   createVehicleSchema,
   updateVehicleSchema,
   vehicleSearchQuerySchema,
+  restockSchema,
 } from './vehicles.schema';
 
 const router = Router();
@@ -45,9 +46,8 @@ router.post('/:id/purchase', (req, res, next) =>
   vehiclesController.purchase(req, res, next)
 );
 
-router.post('/:id/restock', requireAdmin, (req, res, next) =>
+router.post('/:id/restock', requireAdmin, validateBody(restockSchema), (req, res, next) =>
   vehiclesController.restock(req, res, next)
 );
 
 export default router;
-
