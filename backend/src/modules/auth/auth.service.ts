@@ -23,7 +23,9 @@ export class AuthService {
         email: input.email,
         password: hashedPassword,
         name: input.name,
-        role: input.role || 'USER',
+        // Public registration never provisions administrators, even if called
+        // directly with an unvalidated payload.
+        role: 'USER',
       },
     });
 
