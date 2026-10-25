@@ -5,6 +5,7 @@ import { useAuth } from '../auth/context'
 import { DashboardShell } from '../components/layout/DashboardShell'
 import { InventoryFilters } from '../components/vehicles/InventoryFilters'
 import { InventoryMetrics } from '../components/vehicles/InventoryMetrics'
+import { PurchaseDialog } from '../components/vehicles/PurchaseDialog'
 import { VehicleGrid } from '../components/vehicles/VehicleGrid'
 import type { Vehicle, VehicleFilters } from '../types/vehicle'
 
@@ -21,6 +22,10 @@ export function DashboardPage() {
   const [error, setError] = useState('')
   const [filterError, setFilterError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [purchaseVehicle, setPurchaseVehicle] = useState<Vehicle | null>(null)
+  const [purchaseError, setPurchaseError] = useState('')
+  const [purchaseMessage, setPurchaseMessage] = useState('')
+  const [purchasing, setPurchasing] = useState(false)
   const token = session?.token
 
   useEffect(() => {
@@ -85,11 +90,31 @@ export function DashboardPage() {
     setReloadKey((value) => value + 1)
   }
 
+  async function confirmPurchase() {
+    if (!purchaseVehicle || !token || purchasing) return
+    setPurchasing(true)
+    setPurchaseError('')
+    try {
+      const result = await vehiclesApi.purchase(purchaseVehicle.id, token)
+      setPurchaseMessage(result.message)
+      setPurchaseVehicle(null)
+      setReloadKey((value) => value + 1)
+    } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        logout()
+        return
+      }
+      setPurchaseError(requestError instanceof Error ? requestError.message : 'Unable to complete purchase. Please try again.')
+      setReloadKey((value) => value + 1)
+    } finally { setPurchasing(false) }
+  }
+
   return (
     <DashboardShell user={user} onLogout={logout}>
       <main className="px-5 py-7 sm:px-8 lg:px-10 lg:py-9">
         <div className="mx-auto max-w-[96rem]">
           <header className="mb-7"><p className="text-sm font-semibold text-royal-blue">DEALERSHIP OVERVIEW</p><h1 className="mt-2 font-heading text-3xl font-bold sm:text-4xl">Inventory Dashboard</h1><p className="mt-2 text-slate-500">Welcome back, {headingName}. Here is your live inventory position.</p></header>
+          {purchaseMessage && <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800" role="status" aria-label="Purchase successful">{purchaseMessage}</div>}
           {loading ? (
             <div className="grid min-h-80 place-items-center rounded-xl border border-border-gray bg-white" role="status" aria-label="Loading inventory"><div className="text-center"><span className="loading-ring mx-auto block" aria-hidden="true" /><p className="mt-4 font-semibold">Loading inventory…</p></div></div>
           ) : error ? (
@@ -98,11 +123,12 @@ export function DashboardPage() {
             <div className="space-y-7">
               <InventoryMetrics vehicles={vehicles} />
               <InventoryFilters categories={categories} filters={filters} error={filterError} searching={searching} onChange={updateFilter} onReset={resetFilters} onSubmit={submitFilters} />
-              <VehicleGrid vehicles={vehicles} />
+              <VehicleGrid vehicles={vehicles} onPurchase={(vehicle) => { setPurchaseMessage(''); setPurchaseError(''); setPurchaseVehicle(vehicle) }} />
             </div>
           )}
         </div>
       </main>
+      {purchaseVehicle && <PurchaseDialog vehicle={purchaseVehicle} error={purchaseError} submitting={purchasing} onCancel={() => { setPurchaseVehicle(null); setPurchaseError('') }} onConfirm={() => void confirmPurchase()} />}
     </DashboardShell>
   )
 }

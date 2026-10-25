@@ -95,6 +95,8 @@
   .stock-badge { flex: none; border-radius: 9999px; padding: 0.35rem 0.6rem; font-size: 0.7rem; font-weight: 700; }
   .stock-badge--available { background: #ecfdf5; color: #047857; }
   .stock-badge--empty { background: #fff7ed; color: #c2410c; }
+  .dialog-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgb(15 23 42 / 68%); padding: 1rem; }
+  .dialog-card { width: min(100%, 31rem); border-radius: 0.875rem; background: white; padding: 1.5rem; box-shadow: 0 24px 70px -20px rgb(15 23 42 / 55%); }
 }
 
 @media (min-width: 64rem) {

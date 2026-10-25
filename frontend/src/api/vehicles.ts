@@ -10,4 +10,5 @@ export const vehiclesApi = {
     })
     return apiRequest<{ vehicles: Vehicle[] }>(`/vehicles/search?${query.toString()}`, {}, token)
   },
+  purchase: (id: string, token: string) => apiRequest<{ message: string; vehicle: Vehicle }>(`/vehicles/${id}/purchase`, { method: 'POST' }, token),
 }
