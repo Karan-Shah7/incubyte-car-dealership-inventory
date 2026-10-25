@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
-dotenv.config();
+// Tests load their dedicated configuration before application imports.
+if (process.env.NODE_ENV !== 'test') dotenv.config({ quiet: true });
 
 const envSchema = z.object({
   PORT: z.string().default('4000').transform((val) => parseInt(val, 10)),

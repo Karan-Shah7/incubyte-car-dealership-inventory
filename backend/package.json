@@ -7,8 +7,10 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "jest --runInBand",
-    "test:coverage": "jest --runInBand --coverage",
+    "test": "node --test scripts/test-environment.test.cjs && jest --runInBand",
+    "test:coverage": "node --test scripts/test-environment.test.cjs && jest --runInBand --coverage",
+    "test:safety": "node --test scripts/test-environment.test.cjs",
+    "test:database": "node scripts/check-test-database.cjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },
