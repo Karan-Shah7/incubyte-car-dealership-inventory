@@ -19,6 +19,7 @@ export function DashboardShell({ children, user, onLogout }: DashboardShellProps
           <a className="flex items-center gap-3 rounded-lg bg-royal-blue px-4 py-3 text-sm font-semibold text-white" href="/dashboard" aria-current="page">
             <GridIcon /> Dashboard
           </a>
+          {user.role === 'ADMIN' && <a className="mt-2 flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-slate-800" href="/admin/vehicles">Inventory Management</a>}
         </nav>
         <div className="mt-auto border-t border-slate-800 pt-6">
           <p className="truncate text-sm font-semibold">{user.name || 'Dealership user'}</p>
