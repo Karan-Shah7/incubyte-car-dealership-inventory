@@ -16,12 +16,21 @@ export const updateVehicleSchema = z.object({
   quantity: z.number().int().nonnegative().optional(),
 });
 
+const searchPriceSchema = z.string()
+  .regex(/^\d+(\.\d+)?$/, 'Price must be a nonnegative decimal number')
+  .transform(Number)
+  .pipe(z.number().finite().nonnegative())
+  .optional();
+
 export const vehicleSearchQuerySchema = z.object({
   make: z.string().optional(),
   model: z.string().optional(),
   category: z.string().optional(),
-  minPrice: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
-  maxPrice: z.string().optional().transform((val) => (val ? parseFloat(val) : undefined)),
+  minPrice: searchPriceSchema,
+  maxPrice: searchPriceSchema,
+}).refine(query => query.minPrice === undefined || query.maxPrice === undefined ||
+  query.minPrice <= query.maxPrice, {
+  message: 'Minimum price must not exceed maximum price', path: ['maxPrice'],
 });
 
 export const restockSchema = z.object({
