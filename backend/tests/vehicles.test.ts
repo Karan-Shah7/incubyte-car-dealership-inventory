@@ -112,7 +112,7 @@ describe('Vehicles CRUD API (/api/vehicles)', () => {
   });
 
   describe('PUT /api/vehicles/:id (Update Vehicle)', () => {
-    it('should update vehicle details and return 200', async () => {
+    it('should let an admin update vehicle details and quantity', async () => {
       const created = await prisma.vehicle.create({
         data: { make: 'BMW', model: '330i', category: 'Sedan', price: 42000, quantity: 4 },
       });
@@ -124,13 +124,44 @@ describe('Vehicles CRUD API (/api/vehicles)', () => {
 
       const res = await request(app)
         .put(`/api/vehicles/${created.id}`)
-        .set('Authorization', `Bearer ${userToken}`)
+        .set('Authorization', `Bearer ${adminToken}`)
         .send(updatePayload);
 
       expect(res.status).toBe(200);
       expect(res.body.vehicle.price).toBe(40000);
       expect(res.body.vehicle.quantity).toBe(6);
       expect(res.body.vehicle.make).toBe('BMW');
+    });
+
+    it.each([0, 6])('rejects an ordinary user setting quantity to %s without changing the vehicle', async quantity => {
+      const vehicle = await prisma.vehicle.create({
+        data: { make: 'BMW', model: '330i', category: 'Sedan', price: 42000, quantity: 4 },
+      });
+      const res = await request(app).put(`/api/vehicles/${vehicle.id}`)
+        .set('Authorization', `Bearer ${userToken}`).send({ quantity, price: 1 });
+      expect(res.status).toBe(403);
+      expect(await prisma.vehicle.findUnique({ where: { id: vehicle.id } }))
+        .toMatchObject({ quantity: 4, price: 42000 });
+    });
+
+    it('allows ordinary users to update details without changing stock', async () => {
+      const vehicle = await prisma.vehicle.create({
+        data: { make: 'BMW', model: '330i', category: 'Sedan', price: 42000, quantity: 4 },
+      });
+      const res = await request(app).put(`/api/vehicles/${vehicle.id}`)
+        .set('Authorization', `Bearer ${userToken}`).send({ price: 40000 });
+      expect(res.status).toBe(200);
+      expect(res.body.vehicle).toMatchObject({ price: 40000, quantity: 4 });
+    });
+
+    it.each([-1, 1.5, '6', null])('rejects invalid admin quantity %s', async quantity => {
+      const vehicle = await prisma.vehicle.create({
+        data: { make: 'BMW', model: '330i', category: 'Sedan', price: 42000, quantity: 4 },
+      });
+      const res = await request(app).put(`/api/vehicles/${vehicle.id}`)
+        .set('Authorization', `Bearer ${adminToken}`).send({ quantity });
+      expect(res.status).toBe(400);
+      expect((await prisma.vehicle.findUnique({ where: { id: vehicle.id } }))?.quantity).toBe(4);
     });
   });
 
