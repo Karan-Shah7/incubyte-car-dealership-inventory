@@ -33,8 +33,12 @@ router.get('/:id', (req, res, next) =>
   vehiclesController.getById(req, res, next)
 );
 
-router.put('/:id', validateBody(updateVehicleSchema), (req, res, next) =>
-  vehiclesController.update(req, res, next)
+router.put('/:id', validateBody(updateVehicleSchema), (req, res, next) => {
+  // Stock edits require the same authority as restocking. Validate first so
+  // malformed quantities cannot bypass the field check.
+  if (req.body.quantity !== undefined) return requireAdmin(req, res, next);
+  return next();
+}, (req, res, next) => vehiclesController.update(req, res, next)
 );
 
 router.delete('/:id', requireAdmin, (req, res, next) =>
