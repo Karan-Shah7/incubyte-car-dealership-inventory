@@ -319,6 +319,32 @@ describe('Vehicles CRUD API (/api/vehicles)', () => {
       expect(res.body).toHaveProperty('status', 'ok');
     });
   });
+
+  describe('Strict search price validation', () => {
+    it.each([
+      'minPrice=100abc', 'maxPrice=100abc', 'minPrice=abc', 'maxPrice=NaN',
+      'minPrice=-1', 'maxPrice=-1', 'minPrice=', 'maxPrice=',
+      'minPrice=%20', 'maxPrice=Infinity', 'minPrice=1e3', 'maxPrice=0x10',
+      'minPrice=20&maxPrice=10', 'minPrice=1&minPrice=2',
+      `maxPrice=${'9'.repeat(400)}`,
+    ])('rejects invalid price query %s', async query => {
+      const res = await request(app).get(`/api/vehicles/search?${query}`)
+        .set('Authorization', `Bearer ${userToken}`);
+      expect(res.status).toBe(400);
+      expect(res.body.error).toBe('Validation failed');
+    });
+
+    it.each(['minPrice=0', 'maxPrice=100.50', 'minPrice=100.50&maxPrice=100.50'])
+      ('accepts valid decimal and boundary query %s', async query => {
+        const vehicle = await prisma.vehicle.create({
+          data: { make: 'Tata', model: 'Test', category: 'Hatchback', price: 100.50, quantity: 1 },
+        });
+        const res = await request(app).get(`/api/vehicles/search?${query}`)
+          .set('Authorization', `Bearer ${userToken}`);
+        expect(res.status).toBe(200);
+        expect(res.body.vehicles.map((entry: { id: string }) => entry.id)).toEqual([vehicle.id]);
+      });
+  });
 });
 
 
