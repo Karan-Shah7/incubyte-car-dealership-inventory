@@ -138,6 +138,18 @@ describe('Inventory Operations: Purchase & Restock', () => {
     });
   });
 
+  it('sells exactly three units when ten purchases compete for three vehicles', async () => {
+    const vehicle = await prisma.vehicle.create({
+      data: { make: 'Tata', model: 'Nexon', category: 'SUV', price: 845000, quantity: 3 },
+    });
+    const responses = await Promise.all(Array.from({ length: 10 }, () =>
+      request(app).post(`/api/vehicles/${vehicle.id}/purchase`)
+        .set('Authorization', `Bearer ${userToken}`)));
+    expect(responses.filter(response => response.status === 200)).toHaveLength(3);
+    expect(responses.filter(response => response.status === 409)).toHaveLength(7);
+    expect((await prisma.vehicle.findUnique({ where: { id: vehicle.id } }))?.quantity).toBe(0);
+  });
+
   describe('POST /api/vehicles/:id/restock (Admin Restock)', () => {
     it('should return 401 when restocking without a token', async () => {
       const res = await request(app)
