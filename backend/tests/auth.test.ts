@@ -2,6 +2,9 @@ import request from 'supertest';
 import app from '../src/app';
 import { prisma } from '../src/db/client';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { env } from '../src/config/env';
+import { authService } from '../src/modules/auth/auth.service';
 
 describe('Authentication & Authorization', () => {
   const testUser = {
@@ -20,6 +23,8 @@ describe('Authentication & Authorization', () => {
             'bob@dealership.com',
             'dup@dealership.com',
             'login_tester@dealership.com',
+            'role_attempt@dealership.com',
+            'service_role_attempt@dealership.com',
           ],
         },
       },
@@ -46,6 +51,8 @@ describe('Authentication & Authorization', () => {
             'bob@dealership.com',
             'dup@dealership.com',
             'login_tester@dealership.com',
+            'role_attempt@dealership.com',
+            'service_role_attempt@dealership.com',
           ],
         },
       },
@@ -54,6 +61,28 @@ describe('Authentication & Authorization', () => {
   });
 
   describe('POST /api/auth/register', () => {
+    it('cannot grant admin privileges through public registration', async () => {
+      const response = await request(app).post('/api/auth/register').send({
+        email: 'role_attempt@dealership.com', password: 'SecurePassword123!', role: 'ADMIN',
+      });
+      expect(response.status).toBe(201);
+      expect(response.body.user.role).toBe('USER');
+      expect(jwt.verify(response.body.token, env.JWT_SECRET)).toMatchObject({ role: 'USER' });
+      const stored = await prisma.user.findUnique({ where: { email: 'role_attempt@dealership.com' } });
+      expect(stored?.role).toBe('USER');
+      const denied = await request(app).post('/api/vehicles/nonexistent/restock')
+        .set('Authorization', `Bearer ${response.body.token}`).send({ amount: 1 });
+      expect(denied.status).toBe(403);
+    });
+
+    it('keeps registration ordinary even when the service receives a forged role', async () => {
+      const result = await authService.register({
+        email: 'service_role_attempt@dealership.com', password: 'SecurePassword123!', role: 'ADMIN',
+      } as any);
+      expect(result.user.role).toBe('USER');
+      expect(jwt.verify(result.token, env.JWT_SECRET)).toMatchObject({ role: 'USER' });
+    });
+
     it('should register a new user successfully and return 201 with user info and token', async () => {
       const payload = {
         email: 'alice@dealership.com',
