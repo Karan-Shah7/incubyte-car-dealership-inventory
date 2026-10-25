@@ -34,3 +34,30 @@ Approved implementation plan artifact `implementation_plan.md`.
 **Timestamp:** 2026-10-24 20:03:39 (IST)  
 **User Decision on Database:**
 "Install and run local PostgreSQL via winget/installer on my Windows machine."
+
+---
+
+## Interaction Summary: Backend TDD Execution (Phases 0 through 7)
+**Timestamp:** 2026-10-24 20:04 to 20:41 (IST)  
+- Successfully installed and configured PostgreSQL 17 on Windows.
+- Initialised Git repository on branch `main`.
+- Implemented monorepo backend skeleton with Node.js, Express, TypeScript, Prisma, Jest.
+- Executed Red-Green-Refactor TDD across all required spec modules:
+  - Database schema & migrations: `User` and `Vehicle` models.
+  - User Authentication: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`.
+  - Vehicle CRUD: `POST`, `GET`, `PUT`, `DELETE /api/vehicles`.
+  - Vehicle Search: `GET /api/vehicles/search` with make, model, category, and price range filters.
+  - Inventory Atomic Purchase: `POST /api/vehicles/:id/purchase` with transaction isolation and out-of-stock guard.
+  - Admin Restock: `POST /api/vehicles/:id/restock` with `requireAdmin` guard and validation.
+- Every feature verified with genuine, un-mocked Jest tests against PostgreSQL (39 passing tests, 91% code coverage).
+- Every commit includes the required AI co-author trailer:
+  `Co-authored-by: Antigravity <antigravity@google.com>`
+
+---
+
+## Public AI Conversation Log
+
+- ChatGPT / OpenAI Codex planning, review, security, frontend, testing, and submission work:  
+  https://chatgpt.com/share/e/6ade24e0-1cfc-834e-9b70-900e6785f0b9
+
+This public link is supplied as the unedited conversation record. Existing raw prompts above are preserved unchanged.
