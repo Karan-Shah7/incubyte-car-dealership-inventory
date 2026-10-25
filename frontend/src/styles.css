@@ -84,6 +84,17 @@
   .secondary-button:hover { border-color: #94a3b8; background: #f8fafc; }
   .text-link { color: #1d4ed8; font-weight: 700; text-decoration: none; }
   .text-link:hover { text-decoration: underline; }
+  .vehicle-visual {
+    display: grid;
+    min-height: 10rem;
+    place-items: center;
+    background: radial-gradient(circle at 75% 25%, rgb(37 99 235 / 28%), transparent 36%), linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+  }
+  .vehicle-visual span { font-family: var(--font-heading); font-size: 3rem; font-weight: 800; letter-spacing: -0.08em; opacity: 0.9; }
+  .stock-badge { flex: none; border-radius: 9999px; padding: 0.35rem 0.6rem; font-size: 0.7rem; font-weight: 700; }
+  .stock-badge--available { background: #ecfdf5; color: #047857; }
+  .stock-badge--empty { background: #fff7ed; color: #c2410c; }
 }
 
 @media (min-width: 64rem) {
